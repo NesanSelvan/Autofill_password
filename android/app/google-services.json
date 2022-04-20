@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "145029273730",
+    "project_id": "psmanager-f53c2",
+    "storage_bucket": "psmanager-f53c2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:145029273730:android:70cb001d28b8e72fa3bc9b",
+        "android_client_info": {
+          "package_name": "com.example.autofill_password"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "145029273730-s32me9aua6fhg1it97vm9cbu7vjek49p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9VDpUsPVAEX92S-9YQnp2RUAEriUpSqU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "145029273730-s32me9aua6fhg1it97vm9cbu7vjek49p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
