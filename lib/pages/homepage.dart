@@ -1,12 +1,17 @@
+import 'dart:developer';
+
+import 'package:autofill_password/constants/constants.dart';
 import 'package:autofill_password/main.dart';
 import 'package:autofill_password/pages/addingpassword.dart';
 import 'package:autofill_password/pages/themes.dart';
 import 'package:autofill_password/utils/myroutes.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:local_auth/local_auth.dart';
 
 import 'custom_animated_bottombar.dart';
 
@@ -22,11 +27,6 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   int _currentIndex = 0;
   final _inactiveColor = Colors.grey;
-  Future<String> getCurrentUser() async {
-    final user = FirebaseAuth.instance.currentUser;
-    final uid = user?.uid;
-    return uid ?? "";
-  }
 
   final user = FirebaseAuth.instance.currentUser;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -285,8 +285,93 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 }
 
-class CardWidget extends StatelessWidget {
+class CardWidget extends StatefulWidget {
   const CardWidget({Key? key}) : super(key: key);
+
+  @override
+  State<CardWidget> createState() => _CardWidgetState();
+}
+
+class _CardWidgetState extends State<CardWidget> {
+  bool isLoading = true;
+  List<DocumentSnapshot> allDocs = [];
+  // final  val;
+
+  void updatefingerprint(String id) async {
+    print(id);
+    await FirebaseFirestore.instance
+        .collection('websites')
+        .doc(id)
+        .update({"fingerprint": true});
+  }
+
+  final LocalAuthentication auth = LocalAuthentication();
+  bool? _canCheckBiometrics;
+  String _authorized = 'Not Authorized';
+  bool _isAuthenticating = false;
+
+  Future<void> _authenticate() async {
+    bool authenticated = false;
+    try {
+      setState(() {
+        _isAuthenticating = true;
+        _authorized = 'Authenticating';
+      });
+      authenticated = await auth.authenticate(
+        localizedReason: 'Let OS determine authentication method',
+        //  useErrorDialogs: true,
+        //   stickyAuth: true
+      );
+      setState(() {
+        _isAuthenticating = false;
+      });
+    } catch (e) {
+      print(e);
+      setState(() {
+        _isAuthenticating = false;
+        _authorized = "Error - $e";
+      });
+      return;
+    }
+    if (!mounted) return;
+
+    setState(
+        () => _authorized = authenticated ? 'Authorized' : 'Not Authorized');
+    if (authenticated) {}
+  }
+
+  Future<void> _updateAuthentication(String id) async {
+    try {
+      final _authenticated = await auth.authenticate(
+        localizedReason: 'Let OS determine authentication method',
+        //  useErrorDialogs: true,
+        //   stickyAuth: true
+      );
+      log("Website ID: $id");
+      if (_authenticated) {
+        FirebaseFirestore.instance.collection("websites").doc(id).update({
+          "fingerprint": true,
+          "notification": false,
+        });
+      } else {
+        log("Not Recognized");
+      }
+    } catch (e) {
+      return;
+    }
+  }
+
+  late String? userId;
+  @override
+  void initState() {
+    super.initState();
+    getCurrentUser();
+  }
+
+  Future<void> getCurrentUser() async {
+    final user = FirebaseAuth.instance.currentUser;
+    userId = user?.uid;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -357,7 +442,39 @@ class CardWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                )
+                ),
+                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance
+                        .collection("websites")
+                        .where("notification", isEqualTo: true)
+                        .where("uid", isEqualTo: userId)
+                        .snapshots(),
+                    builder: ((context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting)
+                        return CircularProgressIndicator();
+                      if (snapshot.hasData) {
+                        if (snapshot.data == null) {
+                          return Text("No Access from Yet");
+                        }
+
+                        return Column(
+                          children: [
+                            Container(
+                              child: Column(
+                                children: snapshot.data!.docs
+                                    .map((e) => TextButton(
+                                        onPressed: () {
+                                          _updateAuthentication(e.id);
+                                        },
+                                        child: Text(e.data()["website_name"])))
+                                    .toList(),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      return Text("No Data");
+                    }))
               ],
             ),
           ),

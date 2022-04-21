@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:autofill_password/constants/constants.dart';
 import 'package:autofill_password/pages/fingerprintauth.dart';
 import 'package:autofill_password/pages/themes.dart';
@@ -118,7 +120,7 @@ class _GetPasswordsState extends ConsumerState<GetPasswords> {
       setState(() {
         showDialog(
           context: context,
-          builder: (BuildContext context) => _buildPopupDialog(context),
+          builder: (BuildContext context) => _buildPopupDialog(context, index),
         );
         selectedIndex = index;
       });
@@ -153,6 +155,14 @@ class _GetPasswordsState extends ConsumerState<GetPasswords> {
     userId = user?.uid;
     password();
   }
+
+  // void updatefingerprint(String id) async {
+  //   log("Website ID: $id");
+  //   await FirebaseFirestore.instance
+  //       .collection('websites')
+  //       .doc(id)
+  //       .update({"fingerprint": true});
+  // }
 
   int selectedIndex = 1;
 
@@ -236,11 +246,12 @@ class _GetPasswordsState extends ConsumerState<GetPasswords> {
     );
   }
 
-  Widget _buildPopupDialog(BuildContext context) {
+  Widget _buildPopupDialog(BuildContext context, int index) {
     final data =
         (allDocs[selectedIndex].data() as Map<String, dynamic>)["password"]
             .toString();
     final decrypt = Encryption.decrypt(data);
+    //updatefingerprint(allDocs[index].id);
 
     return AlertDialog(
       shape: const RoundedRectangleBorder(

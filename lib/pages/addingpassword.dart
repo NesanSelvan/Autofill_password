@@ -329,12 +329,16 @@ class _AddingpassState extends ConsumerState<Addingpass> {
                       //   final dep = Encryption.decrypt(encypt);
                       //   debugPrint(dep);
                       final userId = await getCurrentUser();
+                      bool checkfingerprint = false;
+                      bool checknotification = false;
                       final firestore = FirebaseFirestore.instance;
                       firestore.collection("websites").add({
                         "website_name": websitelinkcontroller.text,
                         "username": namecontroller.text,
                         "password": encrypt,
                         "uid": userId,
+                        "fingerprint": checkfingerprint,
+                        "notification": checknotification,
                       });
                     },
                   )
